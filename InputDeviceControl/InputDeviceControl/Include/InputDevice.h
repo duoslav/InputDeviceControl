@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <cstdint>
 #include <thread>
+#include <iostream>
 
 class InputDevice
 {
@@ -84,6 +85,34 @@ public:
             NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             buf, (sizeof(buf) / sizeof(wchar_t)), NULL);
         return buf;
+    }
+
+    static std::string GetClipboardText()
+    {
+        // Try opening the clipboard
+        if (!OpenClipboard(nullptr))
+            std::cerr << "ERROR" << __FUNCTION__ << " " << __LINE__;
+
+          // Get handle of clipboard object for ANSI text
+            HANDLE hData = GetClipboardData(CF_TEXT);
+        if (hData == nullptr)
+            std::cerr << "ERROR" << __FUNCTION__ << " " << __LINE__;
+
+          // Lock the handle to get the actual text pointer
+            char* pszText = static_cast<char*>(GlobalLock(hData));
+        if (pszText == nullptr)
+            std::cerr << "ERROR" << __FUNCTION__ << " " << __LINE__;
+
+          // Save text in a string class instance
+            std::string text(pszText);
+
+        // Release the lock
+        GlobalUnlock(hData);
+
+        // Release the clipboard
+        CloseClipboard();
+
+        return text;
     }
 };
 
